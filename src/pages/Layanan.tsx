@@ -18,12 +18,15 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  ExternalLink
 } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Layanan() {
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
   
   const { services, isLoading, error, refreshData } = usePeriodicData();
 
@@ -103,9 +106,32 @@ export default function Layanan() {
             ))}
           </div>
 
+          {/* Layanan Mandiri Card */}
+          <Card className="p-4 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-primary mb-1 flex items-center">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Layanan Mandiri
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Ajukan permohonan surat dan dokumen secara online
+                </p>
+                <Button 
+                  onClick={() => navigate('/layanan-mandiri')}
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Akses Layanan
+                  <ExternalLink className="h-3 w-3 ml-2" />
+                </Button>
+              </div>
+            </div>
+          </Card>
+
           {/* Service Instructions */}
-          <Card className="p-4 bg-primary/5 border-primary/20">
-            <h3 className="font-semibold text-primary mb-2 flex items-center">
+          <Card className="p-4 bg-muted/50">
+            <h3 className="font-semibold mb-2 flex items-center">
               <AlertCircle className="h-4 w-4 mr-2" />
               Cara Menggunakan Layanan
             </h3>
@@ -158,7 +184,8 @@ export default function Layanan() {
                     icon={getServiceIcon(service.icon)}
                     onClick={() => {
                       if (service.status === "available") {
-                        console.log("Opening service:", service.title);
+                        // For now, redirect to Layanan Mandiri for actual service requests
+                        navigate('/layanan-mandiri');
                       }
                     }}
                     className={service.status === "maintenance" ? "opacity-60" : ""}
