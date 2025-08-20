@@ -14,16 +14,148 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      operator_notes: {
+        Row: {
+          created_at: string | null
+          id: string
+          new_status: Database["public"]["Enums"]["request_status"] | null
+          note: string
+          old_status: Database["public"]["Enums"]["request_status"] | null
+          operator_id: string
+          request_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          new_status?: Database["public"]["Enums"]["request_status"] | null
+          note: string
+          old_status?: Database["public"]["Enums"]["request_status"] | null
+          operator_id: string
+          request_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          new_status?: Database["public"]["Enums"]["request_status"] | null
+          note?: string
+          old_status?: Database["public"]["Enums"]["request_status"] | null
+          operator_id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operator_notes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          full_name: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      service_requests: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          documents: Json | null
+          full_name: string
+          id: string
+          nik: string
+          operator_id: string | null
+          operator_notes: string | null
+          phone_number: string
+          request_number: string
+          service_type: Database["public"]["Enums"]["service_type"]
+          status: Database["public"]["Enums"]["request_status"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          documents?: Json | null
+          full_name: string
+          id?: string
+          nik: string
+          operator_id?: string | null
+          operator_notes?: string | null
+          phone_number: string
+          request_number: string
+          service_type: Database["public"]["Enums"]["service_type"]
+          status?: Database["public"]["Enums"]["request_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          documents?: Json | null
+          full_name?: string
+          id?: string
+          nik?: string
+          operator_id?: string | null
+          operator_notes?: string | null
+          phone_number?: string
+          request_number?: string
+          service_type?: Database["public"]["Enums"]["service_type"]
+          status?: Database["public"]["Enums"]["request_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_request_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
     }
     Enums: {
-      [_ in never]: never
+      request_status: "pending" | "on_process" | "completed" | "cancelled"
+      service_type:
+        | "surat_pengantar_ktp"
+        | "surat_keterangan_domisili"
+        | "surat_keterangan_usaha"
+        | "surat_keterangan_tidak_mampu"
+        | "surat_keterangan_belum_menikah"
+        | "surat_pengantar_nikah"
+        | "surat_keterangan_kematian"
+        | "surat_keterangan_kelahiran"
+      user_role: "user" | "operator" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +282,19 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      request_status: ["pending", "on_process", "completed", "cancelled"],
+      service_type: [
+        "surat_pengantar_ktp",
+        "surat_keterangan_domisili",
+        "surat_keterangan_usaha",
+        "surat_keterangan_tidak_mampu",
+        "surat_keterangan_belum_menikah",
+        "surat_pengantar_nikah",
+        "surat_keterangan_kematian",
+        "surat_keterangan_kelahiran",
+      ],
+      user_role: ["user", "operator", "admin"],
+    },
   },
 } as const
