@@ -3,15 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatPrice } from "@/services/api";
 
 interface ProductCardProps {
   name: string;
-  price: string;
-  originalPrice?: string;
+  price: number;
+  originalPrice?: number;
   image: string;
   rating?: number;
   reviewCount?: number;
-  discount?: string;
+  discount?: number;
   onAddToCart?: () => void;
   onClick?: () => void;
   className?: string;
@@ -51,7 +52,7 @@ export const ProductCard = ({
             variant="destructive" 
             className="absolute top-2 left-2 text-xs font-medium"
           >
-            {discount}
+            -{discount}%
           </Badge>
         )}
       </div>
@@ -72,12 +73,12 @@ export const ProductCard = ({
         
         <div className="flex items-center gap-2 mb-3">
           <span className="font-bold text-primary text-sm">
-            {price}
+            {formatPrice(price)}
           </span>
           
           {originalPrice && (
             <span className="text-xs text-muted-foreground line-through">
-              {originalPrice}
+              {formatPrice(originalPrice)}
             </span>
           )}
         </div>
