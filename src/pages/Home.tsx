@@ -5,6 +5,8 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { usePeriodicData } from "@/hooks/usePeriodicData";
+import { formatDate } from "@/services/api";
 import { 
   FileText, 
   Users, 
@@ -14,52 +16,23 @@ import {
   Bell,
   ChevronRight,
   Activity,
-  BarChart3
+  BarChart3,
+  RefreshCw,
+  ExternalLink
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Home() {
   const navigate = useNavigate();
+  const { news, services, isLoading, error, lastUpdated, refreshData } = usePeriodicData();
 
-  const quickServices = [
-    {
-      title: "Surat Pengantar",
-      description: "Buat surat pengantar online dengan mudah",
-      icon: FileText,
-    },
-    {
-      title: "Data Penduduk",
-      description: "Lihat informasi data kependudukan",
-      icon: Users,
-    },
-    {
-      title: "Peta Desa",
-      description: "Jelajahi peta wilayah desa",
-      icon: MapPin,
-    },
-    {
-      title: "Jadwal Kegiatan",
-      description: "Lihat agenda kegiatan desa",
-      icon: Calendar,
-    },
-  ];
+  const recentNews = news.slice(0, 2);
+  const quickServices = services.slice(0, 4);
 
-  const recentNews = [
-    {
-      title: "Pelatihan ILP Desa Tempursari: Meningkatkan Kualitas Pelayanan Kesehatan Masyarakat",
-      excerpt: "Desa Tempursari menggelar pelatihan Integrasi Layanan Primer untuk meningkatkan kualitas pelayanan kesehatan masyarakat.",
-      image: "https://tempursari.id/desa/upload/artikel/sedang_1748236594_ilp%201.jpg",
-      date: "26 Mei 2025",
-      category: "Kesehatan"
-    },
-    {
-      title: "Kopdes Merah Putih Tempursari Resmi Dibentuk",
-      excerpt: "Musyawarah Desa Khusus memutuskan pembentukan Koperasi Desa untuk mendorong kemandiran ekonomi warga.",
-      image: "https://tempursari.id/desa/upload/artikel/sedang_1746674616_1a008833-c409-4920-8216-3e8b0745e1ad.jpg", 
-      date: "8 Mei 2025",
-      category: "Ekonomi"
-    }
-  ];
+  const getServiceIcon = (iconName: string) => {
+    const icons = { FileText, MapPin, Users, Calendar };
+    return icons[iconName as keyof typeof icons] || FileText;
+  };
 
   const stats = [
     { label: "Penduduk", value: "3,311", icon: Users },
@@ -89,15 +62,28 @@ export default function Home() {
                 Selamat Datang di Portal Desa
               </h2>
               <p className="text-sm text-muted-foreground mb-4">
-                Akses semua layanan desa dengan mudah melalui aplikasi mobile
+                Data terintegrasi langsung dari tempursari.id
               </p>
-              <Button 
-                onClick={() => navigate("/layanan")}
-                className="w-full"
-              >
-                Mulai Layanan
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
+              <div className="flex gap-2 justify-center mb-4">
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={refreshData}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+                  Refresh Data
+                </Button>
+                <Button onClick={() => navigate("/layanan")}>
+                  Mulai Layanan
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+              {lastUpdated && (
+                <p className="text-xs text-muted-foreground">
+                  Update: {formatDate(lastUpdated.toLocaleDateString())}
+                </p>
+              )}
             </div>
           </Card>
 
@@ -139,15 +125,24 @@ export default function Home() {
               </Button>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {quickServices.map((service, index) => (
-                <ServiceCard
-                  key={index}
-                  title={service.title}
-                  description={service.description}
-                  icon={service.icon}
-                  onClick={() => navigate("/layanan")}
-                />
-              ))}
+              {isLoading ? (
+                [1,2,3,4].map(i => (
+                  <Card key={i} className="p-3 animate-pulse">
+                    <div className="h-8 bg-muted rounded mb-2"></div>
+                    <div className="h-3 bg-muted rounded"></div>
+                  </Card>
+                ))
+              ) : (
+                quickServices.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    title={service.title}
+                    description={service.description}
+                    icon={getServiceIcon(service.icon)}
+                    onClick={() => navigate("/layanan")}
+                  />
+                ))
+              )}
             </div>
           </div>
 
@@ -169,16 +164,26 @@ export default function Home() {
               </Button>
             </div>
             <div className="space-y-3">
-              {recentNews.map((news, index) => (
-                <NewsCard
-                  key={index}
-                  title={news.title}
-                  excerpt={news.excerpt}
-                  image={news.image}
-                  date={news.date}
-                  category={news.category}
-                />
-              ))}
+              {isLoading ? (
+                [1,2].map(i => (
+                  <Card key={i} className="p-4 animate-pulse">
+                    <div className="h-4 bg-muted rounded mb-2"></div>
+                    <div className="h-3 bg-muted rounded w-3/4"></div>
+                  </Card>
+                ))
+              ) : (
+                recentNews.map((news) => (
+                  <NewsCard
+                    key={news.id}
+                    title={news.title}
+                    excerpt={news.excerpt}
+                    image={news.image}
+                    date={news.date}
+                    category={news.category}
+                    onClick={() => window.open(news.url, '_blank')}
+                  />
+                ))
+              )}
             </div>
           </div>
         </div>

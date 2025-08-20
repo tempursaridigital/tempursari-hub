@@ -5,134 +5,35 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Search,
-  ShoppingCart,
-  Star,
-  Filter,
-  ExternalLink,
-  Truck,
-  Shield,
-  Clock
-} from "lucide-react";
+import { usePeriodicData } from "@/hooks/usePeriodicData";
+import { formatPrice } from "@/services/api";
+import { Search, ShoppingCart, RefreshCw, ExternalLink } from "lucide-react";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 
 export default function Toko() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
-  const [cartCount, setCartCount] = useState(0);
-  const { toast } = useToast();
+  const [cartItems, setCartItems] = useState<string[]>([]);
 
-  const products = [
-    {
-      name: "Beras Organik Premium Tempursari",
-      price: "Rp 25.000",
-      originalPrice: "Rp 30.000",
-      image: "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=400&h=400&fit=crop",
-      rating: 4.8,
-      reviewCount: 24,
-      discount: "-17%",
-      category: "Beras"
-    },
-    {
-      name: "Madu Hutan Asli Klaten",
-      price: "Rp 45.000",
-      image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=400&fit=crop",
-      rating: 4.9,
-      reviewCount: 15,
-      category: "Madu"
-    },
-    {
-      name: "Telur Ayam Kampung Segar",
-      price: "Rp 35.000",
-      originalPrice: "Rp 40.000",
-      image: "https://images.unsplash.com/photo-1518492104633-130d0cc84637?w=400&h=400&fit=crop",
-      rating: 4.7,
-      reviewCount: 31,
-      discount: "-13%",
-      category: "Telur"
-    },
-    {
-      name: "Sayuran Hidroponik Mix",
-      price: "Rp 20.000",
-      image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=400&fit=crop",
-      rating: 4.6,
-      reviewCount: 18,
-      category: "Sayuran"
-    },
-    {
-      name: "Kerupuk Udang Homemade",
-      price: "Rp 15.000",
-      image: "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&h=400&fit=crop",
-      rating: 4.5,
-      reviewCount: 22,
-      category: "Makanan"
-    },
-    {
-      name: "Kopi Robusta Lokal Premium",
-      price: "Rp 35.000",
-      originalPrice: "Rp 42.000",
-      image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop",
-      rating: 4.8,
-      reviewCount: 27,
-      discount: "-17%",
-      category: "Minuman"
-    },
-    {
-      name: "Tempe Segar Tradisional",
-      price: "Rp 8.000",
-      image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&h=400&fit=crop",
-      rating: 4.4,
-      reviewCount: 19,
-      category: "Makanan"
-    },
-    {
-      name: "Hasil Panen Cabai Merah",
-      price: "Rp 28.000",
-      image: "https://images.unsplash.com/photo-1583258292688-d0213dc5252a?w=400&h=400&fit=crop",
-      rating: 4.6,
-      reviewCount: 14,
-      category: "Sayuran"
-    }
-  ];
-
-  const categories = ["Semua", "Beras", "Sayuran", "Makanan", "Minuman", "Madu", "Telur"];
+  const { products, isLoading, error, refreshData } = usePeriodicData();
+  const categories = ["Semua", "Fashion", "Makanan", "Kerajinan"];
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "Semua" || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    return matchesSearch;
   });
-
-  const handleAddToCart = (productName: string) => {
-    setCartCount(prev => prev + 1);
-    toast({
-      title: "Ditambahkan ke keranjang",
-      description: `${productName} berhasil ditambahkan`,
-    });
-  };
-
-  const handleCheckout = () => {
-    window.open('https://shop.tempursari.id', '_blank');
-  };
 
   return (
     <MobileLayout>
       <MobileHeader 
         title="Toko Desa" 
-        subtitle="Produk lokal berkualitas"
+        subtitle="Produk langsung dari shop.tempursari.id"
         action={
-          <Button 
-            size="sm" 
-            variant="secondary" 
-            className="bg-primary-foreground/20 text-primary-foreground border-0 hover:bg-primary-foreground/30 relative"
-            onClick={handleCheckout}
-          >
+          <Button size="sm" variant="secondary" className="bg-primary-foreground/20 text-primary-foreground border-0 relative">
             <ShoppingCart className="h-4 w-4" />
-            {cartCount > 0 && (
-              <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs bg-destructive text-destructive-foreground">
-                {cartCount}
+            {cartItems.length > 0 && (
+              <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs">
+                {cartItems.length}
               </Badge>
             )}
           </Button>
@@ -142,124 +43,85 @@ export default function Toko() {
       <MobileContent>
         <div className="p-4 space-y-4">
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Cari produk..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Cari produk..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button variant="outline" size="icon" onClick={refreshData} disabled={isLoading}>
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
 
-          {/* Categories */}
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {categories.map((category) => (
-              <Badge
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                className="cursor-pointer whitespace-nowrap"
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </Badge>
-            ))}
-          </div>
-
-          {/* Features */}
-          <div className="grid grid-cols-3 gap-2">
-            <Card className="p-3 text-center">
-              <Truck className="h-4 w-4 text-primary mx-auto mb-1" />
-              <p className="text-xs text-muted-foreground">Gratis Ongkir</p>
-            </Card>
-            <Card className="p-3 text-center">
-              <Shield className="h-4 w-4 text-primary mx-auto mb-1" />
-              <p className="text-xs text-muted-foreground">Produk Asli</p>
-            </Card>
-            <Card className="p-3 text-center">
-              <Clock className="h-4 w-4 text-primary mx-auto mb-1" />
-              <p className="text-xs text-muted-foreground">Segar Hari Ini</p>
-            </Card>
-          </div>
-
-          {/* Featured Product */}
-          {selectedCategory === "Semua" && searchTerm === "" && (
-            <Card className="p-4 bg-gradient-primary text-primary-foreground">
-              <div className="flex items-center gap-2 mb-2">
-                <Star className="h-4 w-4 fill-current" />
-                <span className="text-sm font-medium">Produk Unggulan</span>
+          {/* Shop CTA */}
+          <Card className="p-4 bg-gradient-to-r from-primary/10 to-primary-glow/10 border-primary/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-primary mb-1">Kunjungi Toko Online</h3>
+                <p className="text-sm text-muted-foreground">Lihat koleksi lengkap di website resmi</p>
               </div>
-              <h3 className="font-bold mb-1">Paket Beras + Sayuran Organik</h3>
-              <p className="text-sm text-primary-foreground/80 mb-2">
-                Hemat 20% untuk pembelian paket lengkap
-              </p>
               <Button 
+                variant="outline" 
                 size="sm" 
-                variant="secondary"
-                className="bg-primary-foreground text-primary"
-                onClick={handleCheckout}
+                className="border-primary text-primary"
+                onClick={() => window.open('https://shop.tempursari.id', '_blank')}
               >
-                <ExternalLink className="h-3 w-3 mr-1" />
-                Lihat Paket
+                <ExternalLink className="h-4 w-4 mr-1" />
+                Buka
+              </Button>
+            </div>
+          </Card>
+
+          {error && (
+            <Card className="p-4 border-destructive">
+              <p className="text-destructive">Error: {error}</p>
+              <Button variant="outline" size="sm" onClick={refreshData} className="mt-2">
+                Coba Lagi
               </Button>
             </Card>
           )}
 
           {/* Products Grid */}
           <div className="grid grid-cols-2 gap-3">
-            {filteredProducts.map((product, index) => (
-              <ProductCard
-                key={index}
-                name={product.name}
-                price={product.price}
-                originalPrice={product.originalPrice}
-                image={product.image}
-                rating={product.rating}
-                reviewCount={product.reviewCount}
-                discount={product.discount}
-                onAddToCart={() => handleAddToCart(product.name)}
-                onClick={handleCheckout}
-              />
-            ))}
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="p-3 animate-pulse">
+                  <div className="aspect-square bg-muted rounded mb-2"></div>
+                  <div className="h-3 bg-muted rounded mb-1"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                </Card>
+              ))
+            ) : (
+              filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  name={product.name}
+                  price={product.price}
+                  originalPrice={product.originalPrice}
+                  discount={product.discount}
+                  image={product.image}
+                  rating={product.rating}
+                  reviewCount={product.reviewCount}
+                  onAddToCart={() => {
+                    setCartItems(prev => [...prev, product.id]);
+                  }}
+                  onClick={() => window.open(product.url, '_blank')}
+                />
+              ))
+            )}
           </div>
 
-          {filteredProducts.length === 0 && (
+          {!isLoading && filteredProducts.length === 0 && (
             <Card className="p-8 text-center">
               <Search className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-muted-foreground mb-2">Produk tidak ditemukan</p>
-              <p className="text-sm text-muted-foreground">
-                Coba ubah kata kunci pencarian atau kategori
-              </p>
+              <p className="text-muted-foreground">Tidak ada produk yang ditemukan</p>
             </Card>
           )}
-
-          {/* Checkout Button */}
-          {cartCount > 0 && (
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold">{cartCount} item di keranjang</p>
-                  <p className="text-sm text-muted-foreground">Lanjutkan ke checkout</p>
-                </div>
-                <Button onClick={handleCheckout}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Checkout
-                </Button>
-              </div>
-            </Card>
-          )}
-
-          {/* Shop Info */}
-          <Card className="p-4 text-center border-primary/20 bg-primary/5">
-            <h3 className="font-semibold text-primary mb-2">Toko Online Lengkap</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              Kunjungi website toko untuk melihat produk lengkap dan melakukan pemesanan
-            </p>
-            <Button variant="outline" onClick={handleCheckout} className="w-full">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Buka shop.tempursari.id
-            </Button>
-          </Card>
         </div>
       </MobileContent>
       

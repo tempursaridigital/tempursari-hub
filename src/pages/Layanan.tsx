@@ -4,6 +4,8 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { usePeriodicData } from "@/hooks/usePeriodicData";
 import { 
   FileText, 
   Users, 
@@ -15,71 +17,29 @@ import {
   Search,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
 import { useState } from "react";
 
 export default function Layanan() {
   const [searchTerm, setSearchTerm] = useState("");
+  
+  const { services, isLoading, error, refreshData } = usePeriodicData();
 
-  const services = [
-    {
-      title: "Surat Pengantar KTP",
-      description: "Buat surat pengantar untuk pembuatan KTP baru atau perpanjangan",
-      icon: FileText,
-      category: "Kependudukan",
-      status: "available"
-    },
-    {
-      title: "Surat Keterangan Domisili",
-      description: "Surat keterangan tempat tinggal untuk berbagai keperluan",
-      icon: MapPin,
-      category: "Kependudukan", 
-      status: "available"
-    },
-    {
-      title: "Surat Keterangan Usaha",
-      description: "Legalisasi usaha dan UMKM di wilayah desa",
-      icon: Building,
-      category: "Ekonomi",
-      status: "available"
-    },
-    {
-      title: "Surat Keterangan Sehat",
-      description: "Surat keterangan kesehatan dari puskesmas desa",
-      icon: Heart,
-      category: "Kesehatan",
-      status: "maintenance"
-    },
-    {
-      title: "Data Penduduk",
-      description: "Lihat dan cetak data kependudukan desa",
-      icon: Users,
-      category: "Kependudukan",
-      status: "available"
-    },
-    {
-      title: "Beasiswa Pendidikan",
-      description: "Informasi dan pendaftaran beasiswa untuk warga",
-      icon: GraduationCap,
-      category: "Pendidikan",
-      status: "available"
-    },
-    {
-      title: "Jadwal Posyandu",
-      description: "Lihat jadwal dan daftar posyandu terdekat",
-      icon: Calendar,
-      category: "Kesehatan",
-      status: "available"
-    },
-    {
-      title: "Pengaduan Masyarakat",
-      description: "Sampaikan keluhan dan saran untuk perbaikan desa",
-      icon: AlertCircle,
-      category: "Pelayanan",
-      status: "available"
-    },
-  ];
+  const getServiceIcon = (iconName: string) => {
+    const icons = {
+      FileText,
+      MapPin,
+      Building,
+      Heart,
+      Users,
+      GraduationCap,
+      Calendar,
+      AlertCircle
+    };
+    return icons[iconName as keyof typeof icons] || FileText;
+  };
 
   const categories = ["Semua", "Kependudukan", "Kesehatan", "Ekonomi", "Pendidikan", "Pelayanan"];
   const [selectedCategory, setSelectedCategory] = useState("Semua");
@@ -109,14 +69,24 @@ export default function Layanan() {
       <MobileContent>
         <div className="p-4 space-y-4">
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Cari layanan..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Cari layanan..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={refreshData}
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
 
           {/* Categories */}
@@ -148,30 +118,60 @@ export default function Layanan() {
             </ul>
           </Card>
 
+          {/* Error State */}
+          {error && (
+            <Card className="p-4 border-destructive">
+              <p className="text-destructive">Error: {error}</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={refreshData}
+                className="mt-2"
+              >
+                Coba Lagi
+              </Button>
+            </Card>
+          )}
+
           {/* Services List */}
           <div className="space-y-3">
-            {filteredServices.map((service, index) => (
-              <div key={index} className="relative">
-                <ServiceCard
-                  title={service.title}
-                  description={service.description}
-                  icon={service.icon}
-                  onClick={() => {
-                    if (service.status === "available") {
-                      // Navigate to service detail or form
-                      console.log("Opening service:", service.title);
-                    }
-                  }}
-                  className={service.status === "maintenance" ? "opacity-60" : ""}
-                />
-                <div className="absolute top-3 right-3">
-                  {getStatusBadge(service.status)}
-                </div>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i} className="p-4 animate-pulse">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-muted rounded"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-muted rounded mb-2"></div>
+                        <div className="h-3 bg-muted rounded w-3/4"></div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
-            ))}
+            ) : (
+              filteredServices.map((service) => (
+                <div key={service.id} className="relative">
+                  <ServiceCard
+                    title={service.title}
+                    description={service.description}
+                    icon={getServiceIcon(service.icon)}
+                    onClick={() => {
+                      if (service.status === "available") {
+                        console.log("Opening service:", service.title);
+                      }
+                    }}
+                    className={service.status === "maintenance" ? "opacity-60" : ""}
+                  />
+                  <div className="absolute top-3 right-3">
+                    {getStatusBadge(service.status)}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
-          {filteredServices.length === 0 && (
+          {!isLoading && filteredServices.length === 0 && (
             <Card className="p-8 text-center">
               <Search className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
               <p className="text-muted-foreground">Tidak ada layanan yang ditemukan</p>
