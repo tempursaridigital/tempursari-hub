@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Debug</title>
+</head>
+<body>
+    <h1>API Debug Test</h1>
+    <button onclick="testAPI()">Test API</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                // Test basic Supabase connection
+                const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+                
+                const supabaseUrl = 'YOUR_SUPABASE_URL';
+                const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+                
+                const supabase = createClient(supabaseUrl, supabaseKey);
+                
+                // Test query
+                const { data, error } = await supabase
+                    .from('service_requests')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: green;">Success! Found ${data.length} requests</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Exception: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
