@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Search, Clock, CheckCircle, XCircle, RefreshCw, ArrowLeft, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { layananApi } from "@/services/layananApi";
+import { layananApi, ServiceType, RequestStatus } from "@/services/layananApi";
 
 interface StatusTrackerProps {
   onBack: () => void;
@@ -16,11 +16,11 @@ interface StatusTrackerProps {
 interface RequestData {
   id: string;
   request_number: string;
-  service_type: string;
+  service_type: ServiceType;
   full_name: string;
   nik: string;
   phone_number: string;
-  status: string;
+  status: RequestStatus;
   created_at: string;
   updated_at: string;
   operator_notes?: string;
