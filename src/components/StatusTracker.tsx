@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Search, Clock, CheckCircle, XCircle, RefreshCw, ArrowLeft, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { layananApi, ServiceType, RequestStatus } from "@/services/layananApi";
 
 interface StatusTrackerProps {
   onBack: () => void;
@@ -16,26 +16,17 @@ interface StatusTrackerProps {
 interface RequestData {
   id: string;
   request_number: string;
-  service_type: string;
+  service_type: ServiceType;
   full_name: string;
   nik: string;
   phone_number: string;
-  status: string;
+  status: RequestStatus;
   created_at: string;
   updated_at: string;
   operator_notes?: string;
 }
 
-const serviceTypeNames = {
-  'surat_pengantar_ktp': 'Surat Pengantar KTP',
-  'surat_keterangan_domisili': 'Surat Keterangan Domisili',
-  'surat_keterangan_usaha': 'Surat Keterangan Usaha',
-  'surat_keterangan_tidak_mampu': 'Surat Keterangan Tidak Mampu',
-  'surat_keterangan_belum_menikah': 'Surat Keterangan Belum Menikah',
-  'surat_pengantar_nikah': 'Surat Pengantar Nikah',
-  'surat_keterangan_kematian': 'Surat Keterangan Kematian',
-  'surat_keterangan_kelahiran': 'Surat Keterangan Kelahiran'
-};
+
 
 const statusConfig = {
   pending: {
@@ -81,17 +72,10 @@ export const StatusTracker = ({ onBack }: StatusTrackerProps) => {
     setIsLoading(true);
     
     try {
-      const { data, error } = await supabase
-        .from('service_requests')
-        .select('*')
-        .eq('nik', nik.trim())
-        .order('created_at', { ascending: false })
-        .limit(1);
+      const request = await layananApi.getRequestByNIK(nik.trim());
 
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        setRequestData(data[0]);
+      if (request) {
+        setRequestData(request);
       } else {
         setRequestData(null);
         toast({
@@ -184,7 +168,7 @@ export const StatusTracker = ({ onBack }: StatusTrackerProps) => {
               <div>
                 <h3 className="font-semibold text-lg">{requestData.request_number}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {serviceTypeNames[requestData.service_type as keyof typeof serviceTypeNames]}
+                  {layananApi.getServiceTypeName(requestData.service_type)}
                 </p>
               </div>
               {getStatusBadge(requestData.status)}

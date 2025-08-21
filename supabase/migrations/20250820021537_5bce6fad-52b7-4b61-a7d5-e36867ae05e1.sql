@@ -99,8 +99,8 @@ CREATE POLICY "Operators can view all profiles" ON public.profiles
 CREATE POLICY "Users can view own requests" ON public.service_requests
   FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert own requests" ON public.service_requests
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Allow anonymous and authenticated requests" ON public.service_requests
+  FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Anyone can view requests by NIK for status check" ON public.service_requests
   FOR SELECT USING (true);
@@ -119,16 +119,14 @@ CREATE POLICY "Operators can insert notes" ON public.operator_notes
   FOR INSERT WITH CHECK (public.get_user_role(auth.uid()) IN ('operator', 'admin') AND auth.uid() = operator_id);
 
 -- Storage policies for service documents
-CREATE POLICY "Users can upload their own documents" ON storage.objects
+CREATE POLICY "Allow anonymous document uploads" ON storage.objects
   FOR INSERT WITH CHECK (
-    bucket_id = 'service-documents' AND
-    auth.uid()::text = (storage.foldername(name))[1]
+    bucket_id = 'service-documents'
   );
 
-CREATE POLICY "Users can view their own documents" ON storage.objects
+CREATE POLICY "Allow viewing all documents" ON storage.objects
   FOR SELECT USING (
-    bucket_id = 'service-documents' AND
-    auth.uid()::text = (storage.foldername(name))[1]
+    bucket_id = 'service-documents'
   );
 
 CREATE POLICY "Operators can view all documents" ON storage.objects
